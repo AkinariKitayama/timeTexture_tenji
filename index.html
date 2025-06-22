@@ -60,9 +60,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <!-- SVG Path Properties for curved seekbars -->
-  <script src="https://cdn.jsdelivr.net/npm/svg-path-properties@1.0.3/dist/svg-path-properties.min.js"></script>
-</head>
+ </head>
 <body>
 
   <div class="container">
@@ -1416,8 +1414,25 @@
 
     //形状認識した結果の取得
     hands.onResults(results => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      //ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+      if(results.multiHandLandmarks){
+       const landmarks = 
+          results.multiHandLandmarks.map(hand =>
+              hand.map(point => ({
+                x: point.x,
+                y: point.y,
+                z: point.z
+              }))  
+          );
+        console.log("Sending landmarks", landmarks);
+        broadcast.postMessage({ 
+          landmarks:landmarks,
+          isPinching: isPinching
+         });
+        }
+      
+      
+      // ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         lostFrames = 0;
