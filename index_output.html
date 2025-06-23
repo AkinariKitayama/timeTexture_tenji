@@ -9,29 +9,86 @@
     #output{
         display: block; 
         margin: 0 auto 1rem;
-        width: 960px;
-        height: 540;
+        width: 100vw;
+        height: 100vh;
         max-width: 100%;
         transform: scaleX(-1);
         transform-origin: center;
-        
+        z-index: "9999";
+
         background-color: black;
         opacity: 1;
     }
     output video{
       opacity: 0;
     }    
+    #statusText{
+      position: fixed;
+      bottom: 5vh;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 1.1rem;
+      font-family: "游ゴシック体", sans-serif;
+      pointer-events: none;
+      z-index: 10000;
+      transition: opacity 0.1s linear;
+      opacity: 1;
+    }
+
 </style>
   <script>
+
+  (function(d) {
+    var config = {
+      kitId: 'ebo3sjd',
+      scriptTimeout: 3000,
+      async: true
+    },
+    h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
+  })(document);
+
     const channel = new BroadcastChannel("handDataChannel");
+    // 送られてくるピンチ状態を保持
+    let isPinchingRemote = false;
+    // 送られてくる当たり判定フラグを保持
+    let flagHitPoint = false;
     let latestLandmarks = null;
+    let currentStatusText = "";
 
     channel.onmessage = (event) => {
       if(event.data && event.data.landmarks) {
-      latestLandmarks = event.data.landmarks[0];
+        latestLandmarks = event.data.landmarks[0];
+      } else {
+        latestLandmarks = null;
       }
       if(typeof event.data.isPinching === "boolean"){
         isPinchingRemote = event.data.isPinching;
+      }
+      if (typeof event.data.flagHitPoint === "boolean") {
+        flagHitPoint = event.data.flagHitPoint;
+      }
+      let newMessage = "";
+      if(!latestLandmarks || latestLandmarks.length === 0){
+        newMessage = 
+         "カメラに手をかざしてください";
+      } else if(!isPinchingRemote){
+        newMessage =
+        "人差し指と親指を近づけてください";
+      } else if(flagHitPoint){
+        newMessage = 
+        "シーク中";
+      } else {
+        newMessage = 
+        "hogehoge"
+      }
+      if(newMessage !== currentStatusText) {
+        statusText.style.opacity = 0;
+        setTimeout(() => {
+          statusText.textContent = newMessage;
+          statusText.style.opacity = 1;
+          currentStatusText = newMessage;
+        }, 300);
       }
     };
   </script>
@@ -46,6 +103,7 @@
     <!--  認識した手の形状を可視化した映像（出力）  -->
     <canvas id="output" width="1920" height="1080"></canvas>
   </div>
+  <div id="statusText">カメラに手をかざしてください</div>
 
   <script>    
 
@@ -53,6 +111,7 @@
   
     const canvas = document.getElementById('output');
     const ctx = canvas.getContext('2d');
+    const statusText = document.getElementById("statusText");
 
     let isPinching = false;
     let wasPinching = false;
@@ -71,7 +130,8 @@
         ctx.moveTo(latestLandmarks[4].x * canvas.width, latestLandmarks[4].y * canvas.height);
         ctx.lineTo(latestLandmarks[8].x * canvas.width, latestLandmarks[8].y * canvas.height);
         ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 1;
+        // ctx.strokeCap(SQUARE);
         ctx.stroke();
        }
       for (let i = 0; i < latestLandmarks.length; i++) {
@@ -79,9 +139,13 @@
         const x = landmark.x * canvas.width;
         const y = landmark.y * canvas.height;
         ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
         if (i === 4 || i === 8) {
-          ctx.fillStyle = `rgba(240, 0, 0, 1)`;
+          if(isPinchingRemote){
+          ctx.fillStyle = `rgba(240, 0, 0, ${1 - alpha})`;
+          } else {
+          ctx.fillStyle = `rgba(225, 255, 255, ${alpha})`;  
+          }
         } else {
           ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         }
@@ -91,7 +155,7 @@
         pointAlpha -= 0.1;
         if (pointAlpha < 0) pointAlpha = 0;
       } else {
-        pointAlpha += 0.2;
+        pointAlpha += 0.3;
         if (pointAlpha > 1) pointAlpha = 1;
       }
       requestAnimationFrame(renderFromReceivedData);
@@ -121,7 +185,7 @@ window.addEventListener("DOMContentLoaded", () => {
       if(event.key == "Enter"){
         if(isRunning){
           camera.stop();
-          lostFrames = 0;
+        
           isRunning = false;
         }else{
           camera.start();
