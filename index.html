@@ -38,21 +38,7 @@
         width: 80%;
 
     }
-    #output{
-        display: block; 
-        margin: 0 auto 1rem;
-        width: 480px;
-        height: auto;
-        max-width: 100%;
-        transform: scaleX(-1);
-        transform-origin: center;
-        
-        background-color: black;
-        opacity: 1;
-    }
-    output video{
-      opacity: 0;
-    }
+
 
     
 </style>
@@ -1316,8 +1302,50 @@
     const dualContainer = document.getElementById("dualContainer");
     const videoL = document.getElementById("videoL");
     const videoR = document.getElementById("videoR");
+
+    // ---------- seek‑queue helper ----------
+    // 1) 連続 seek を直列化してデコード完了を待つ
+    let pendingSeek = false;   // 現在 seek 中か
+    let queuedSeek  = null;    // 次に送りたい time
+
+    function requestSeek(time){
+      if(!Number.isFinite(time)) return;       // 不正値ガード
+      if(!pendingSeek){
+        pendingSeek = true;
+        videoFootage.currentTime = time;
+      }else{
+        queuedSeek = time;                     // 次の順番を覚える
+      }
+    }
+
+    // seek 完了後に次を流す
+    videoFootage.addEventListener('seeked', () => {
+      pendingSeek = false;
+      if(queuedSeek !== null){
+        const next = queuedSeek;
+        queuedSeek = null;
+        requestSeek(next);                     // 再帰的に発射
+      }
+    });
+    // ---------- /seek‑queue helper ----------
     
     var currentTimeHis = [];
+
+    let loopCount = 0;
+    let prevTimePos = 0;
+
+    videoFootage.addEventListener("timeupdate", () => {
+      if(pendingSeek)return;
+
+      if(videoFootage.currentTime < prevTimePos) {
+        loopCount += 1;
+        if(loopCount >= 3){
+          switchVideo(currentVideoIndex + 1);
+        }
+      }
+      prevTimePos = videoFootage.currentTime;
+    });
+  
     
 
   
@@ -1339,6 +1367,8 @@
       // 範囲内に収める
       currentVideoIndex = ((toIndex % videoSources.length) + videoSources.length) % videoSources.length;
       currentConfig = videoSources[currentVideoIndex];
+      loopCount = 0;
+      prevTimePos = 0;
 
       if (Array.isArray(currentConfig.dual)) {
         videoFootage.style.display = "none";
@@ -1375,10 +1405,13 @@
     let wasPinching = false;
     let pointAlpha = 1.0;
     
+    let flagHitPoint = false;
 
     //手検出のロストフレームカウント
     let lostFrames = 0;
     const maxLostFrames = 20;
+
+    let downTime = 2;
 
     let stopCurrentTime = 0;
     const stopMax = 300;
@@ -1426,7 +1459,8 @@
         console.log("Sending landmarks", landmarks);
         broadcast.postMessage({ 
           landmarks:landmarks,
-          isPinching: isPinching
+          isPinching: isPinching,
+          flagHitPoint: flagHitPoint
          });
         }
       
@@ -1530,6 +1564,7 @@ if(isOutputFullscreen) return;
           // 当たり判定内外で再生制御・マッピング
           const epsilon = 0.05;
           if (currentConfig.hitPoint(fingPosX, fingPosY)) {
+            flagHitPoint = true;
             const duration =
               Array.isArray(currentConfig.dual)
                 ? videoL.duration
@@ -1539,7 +1574,7 @@ if(isOutputFullscreen) return;
             if (currentConfig.start && currentConfig.end && isPinching) {
               videoFootage.pause();
               if (Number.isFinite(t)) {
-                videoFootage.currentTime = t;
+                requestSeek(t);
                 if(t < 0.01)t = 0;
                 if(t > 0.99)t = videoFootage.duration;
               } else {
@@ -1577,25 +1612,27 @@ if(isOutputFullscreen) return;
                 distVal
               );
               if (Number.isFinite(t)) {
-                videoFootage.currentTime = t;
+                requestSeek(t);
               } else {
                 console.warn("Invalid zoom seek time:", t);
               }
             } else if(isPinching){
               videoFootage.pause();
               if (Number.isFinite(t)) {
-                videoFootage.currentTime = t;
+                requestSeek(t);
               } else {
                 console.warn("Invalid pinch seek time:", t);
               }
             }
           } else if (!(isPinching && wasPinching)) {
             if (Array.isArray(currentConfig.dual)) {
+              flagHitPoint = false;
               videoL.play();
               videoR.play();
             }
           } else {
             if (videoFootage.currentTime < videoFootage.duration - epsilon) {
+              flagHitPoint = false;
               videoFootage.play();
             }
           }
@@ -1603,6 +1640,7 @@ if(isOutputFullscreen) return;
       } else { // 指が消えたら
         isPinching = false;
         wasPinching = false;
+        flagHitPoint = false;
         lostFrames++;
         // 最新の履歴値を常に表示
         if (currentTimeHis.length > 0) {
@@ -1618,7 +1656,7 @@ if(isOutputFullscreen) return;
       }
     }); // hands.onResults
   
-  
+
     
 
     //認識開始・終了ボタン
