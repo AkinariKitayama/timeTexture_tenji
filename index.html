@@ -15,6 +15,17 @@
      min-height: 100%;
      
      }
+    #overlayVideo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 10;
+      transform: translateX(0px) scale(1);
+      transform-origin: center center; 
+     }
     #videoL{
       width: 45%;
       height: auto;
@@ -56,9 +67,10 @@
     
     <!--  認識した手の形状を可視化した映像（出力）  -->
     <canvas id="output" class="hidden"></canvas>
-  </div>
+  </div> 
 
   <video id="videoFootage" autoplay muted playsinline loop></video>
+  <video id="overlayVideo" autoplay muted playsinline loop></video>
   
   <div id="dualContainer">
     <video id="videoL" autoplay muted playsinline loop></video>
@@ -75,6 +87,7 @@
   //ビデオ入れ
     const mapMargin = 0.02;
     const videoSources = [
+      
      {
       src: "./movs/tennisball.mp4",
       xMin: 0.3, xMax: 0.7,
@@ -1258,6 +1271,261 @@
         return (1 - clip) * duration;
       }
       },
+      {
+      src:"./movmas/glasses2.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (x - this.xMin)/(this.xMax - this.xMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return clip * duration;
+      }
+      },
+      {
+      src:"./movmas/river.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (x - this.xMin)/(this.xMax - this.xMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return (clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/kawaTate.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.1, yMax: 0.9,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return (1-clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/jitensha.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return (1-clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/taki_up.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return (clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/taki2.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return (clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/taki.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return (clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/train_tooi.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (x - this.xMin)/(this.xMax - this.xMin);
+        const clip = Math.min(Math.max(t, 0.01), 0.99);
+        return (clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/jaguchi.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return (clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/jaguchi.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return (1 - clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/birds.mp4",
+         xMin: 0.4, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (x - this.xMin)/(this.xMax - this.xMin);
+        const clip = Math.min(Math.max(t, 0.01), 0.99);
+        return (1-clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/jaguchiTate.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.1, yMax: 0.9,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return (clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/boat.mp4",
+         xMin: 0.4, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (x - this.xMin)/(this.xMax - this.xMin);
+        const clip = Math.min(Math.max(t, 0.01), 0.99);
+        return (clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/mov_kanban.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (x - this.xMin)/(this.xMax - this.xMin);
+        const clip = Math.min(Math.max(t, 0.01), 0.99);
+        return (clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/natto.mp4",
+         xMin: 0.4, xMax: 0.9,
+         yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0.01), 0.99);
+        return (1-clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/Tswipe.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.1, yMax: 0.9,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0.01), 0.99);
+        return (1-clip) * duration;
+      }
+      },
+      {
+      src:"./movmas/TswipeFingar.mp4",
+         xMin: 0.1, xMax: 0.9,
+         yMin: 0.1, yMax: 0.9,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (y - this.yMin)/(this.yMax - this.yMin);
+        const clip = Math.min(Math.max(t, 0.01), 0.99);
+        return (1-clip) * duration;
+      }
+      },
     ];
 
     videoSources.forEach(cfg => {
@@ -1287,6 +1555,12 @@
   }
   
 });
+
+
+
+//const overlayVideo = document.getElementById("overlayVideo");
+//overlayVideo.src = "./movs_high/Miller_A.webm";
+//overlayVideo.play();
 
     let isOutputFullscreen = false;
     
@@ -1337,7 +1611,7 @@
     videoFootage.addEventListener("timeupdate", () => {
       if(pendingSeek)return;
 
-      if(videoFootage.currentTime < prevTimePos) {
+      if(videoFootage.currentTime < prevTimePos && !(isPinching || wasPinching)) {
         loopCount += 1;
         if(loopCount >= 3){
           switchVideo(currentVideoIndex + 1);
@@ -1410,11 +1684,21 @@
     //手検出のロストフレームカウント
     let lostFrames = 0;
     const maxLostFrames = 20;
+    let marginTimeCounter = 0;
+    const marginTime = 3;
+
 
     let downTime = 2;
 
     let stopCurrentTime = 0;
     const stopMax = 300;
+
+    //marginTimeの補間用変数
+    let endSeek = null;
+    let startSeek = null;
+    let isInterP = false;
+    let interPoStartTime = null;
+    const interPoDuration = 300;
 
     // スムージング用変数と係数
     let smoothedIndexPosX = 0;
@@ -1440,8 +1724,8 @@
     hands.setOptions({
         maxNumHands: 1,              //検出する手の最大数
         modelComplexity: 1,          //ランドマーク検出精度(0か1)
-        minDetectionConfidence: 0.3, //手を検出するための信頼値(0.0~1.0)　ここ0にしたら面白そう
-        minTrackingConfidence: 0.2   //ランドマーク追跡の信頼度(0.0~1.0)
+        minDetectionConfidence: 0.7, //手を検出するための信頼値(0.0~1.0)　ここ0にしたら面白そう
+        minTrackingConfidence: 0.5   //ランドマーク追跡の信頼度(0.0~1.0)
     });
 
 
@@ -1470,6 +1754,7 @@
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         lostFrames = 0;
+        marginTimeCounter = 0;
 
         results.multiHandLandmarks.forEach(marks => {
           let newTarget = 0;
@@ -1520,6 +1805,8 @@
           const distance = Math.hypot(dx, dy);
           const tikasa = 0.08;
 
+          //console.log("marginTime :", marginTimeCounter);
+
           // ピンチ判定
           if (distance < tikasa) {
             duration = Array.isArray(currentConfig.dual)
@@ -1532,7 +1819,7 @@
               duration,
               distVal
             );
-            const lastTime = currentTimeHis.at(-1);
+            //const lastTime = currentTimeHis.at(-1);
             //console.log(lastTime);
             
             if (!isPinching) {
@@ -1540,7 +1827,7 @@
               wasPinching = true;
             }
           } else {
-            const lastTime = currentTimeHis.at(-1);
+          //const lastTime = currentTimeHis.at(-1);
            // console.log(lastTime);
             isPinching = false;
             if (!isPinching) {
@@ -1551,6 +1838,12 @@
                 videoFootage.play();
               }
             }
+          }
+
+          if(isPinching){
+            currentTimeHis.push(videoFootage.currentTime);
+            if(currentTimeHis.length > 30)currentTimeHis.shift();
+            console.log(currentTimeHis.at(-1));
           }
         
 
@@ -1636,17 +1929,32 @@ if(isOutputFullscreen) return;
               videoFootage.play();
             }
           }
+
+
+
+          if(isPinching && endSeek !== null) {
+            startSeek = videoFootage.currentTIme;
+            isInterP = true;
+            requestAnimationFrame(interpolateSeek);
+            endSeek = null;
+          }
+
         }); // forEach
       } else { // 指が消えたら
+        if(isPinching && marginTimeCounter <= marginTime) {
+          endSeek = videoFootage.currentTime;
+          marginTimeCounter++
+        } else {
         isPinching = false;
         wasPinching = false;
         flagHitPoint = false;
         lostFrames++;
+        }
         // 最新の履歴値を常に表示
         if (currentTimeHis.length > 0) {
-          console.log(currentTimeHis[currentTimeHis.length - 1]);
+          //console.log(currentTimeHis[currentTimeHis.length - 1]);
         }
-        console.log("lostFrames:", lostFrames);
+        //console.log("lostFrames:", lostFrames);
       }
       if(lostFrames > maxLostFrames){
       videoFootage.play().catch(() => {});
@@ -1655,6 +1963,24 @@ if(isOutputFullscreen) return;
       lostFrames = 0;
       }
     }); // hands.onResults
+
+    function interpolateSeek(timestamp){
+      if(!isInterP) return;
+      if(!interPoStartTime) interPoStartTime = timestamp;
+
+     const elapsed = timestamp - interPoStartTime;
+     const t = Math.min(elapsed / interPoDuration, 1);
+     const interpTime = (1 - t) * endSeek + t * startSeek;
+
+     videoFootage.currentTime = interpTime;
+
+     if(t < 1) {
+      requestAnimationFrame(interpolateSeek);
+     } else {
+      isInterP = false;
+      interPoStartTime = null;
+     }
+    }
   
 
     
@@ -1670,6 +1996,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const outputElem = document.getElementById("output");
     const videos = document.getElementById("videoFootage");
     const dualVideos = document.getElementById("dualContainer");
+    
     // 検知キャンバスを非表示
     outputElem.style.display = "none";
     // videoFootage を画面中央に拡大
@@ -1679,6 +2006,9 @@ window.addEventListener("DOMContentLoaded", () => {
     videos.style.top = "50%";
     videos.style.left = "50%";
     videos.style.transform = "translate(-50%, -50%)";
+    
+
+    
     // dualContainer を画面中央に拡大
     dualVideos.style.width = "80%";
     dualVideos.style.margin = "0 auto";
