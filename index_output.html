@@ -28,12 +28,21 @@
       left: 50%;
       transform: translateX(-50%);
       color: white;
-      font-size: 1.1rem;
+      font-size: 1.4rem;
       font-family: "游ゴシック体", sans-serif;
       pointer-events: none;
       z-index: 10000;
       transition: opacity 0.1s linear;
       opacity: 1;
+    }
+    #UIcanvas{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 10000;
     }
 
 </style>
@@ -56,6 +65,14 @@
     let latestLandmarks = null;
     let currentStatusText = "";
 
+    let expIndex = "";
+    const ellipseItems = [
+      {exp : "01", label: "動力源の手触り", desc: "動力源の有無によって、操作感の次元が変わる"},
+      {exp : "02", label: "差異の手触り", desc: "画角は変えずに、対象物や動きの属性を変える"},
+      {exp : "03", label: "方向の手触り", desc: "動きの始点や終点が存在せず、方向性だけが残っている"},
+      {exp : "04" , label: "変換の手触り", desc: "指の直線的な動きが対象の異なる動きに変換される"}
+    ];
+
     channel.onmessage = (event) => {
       if(event.data && event.data.landmarks) {
         latestLandmarks = event.data.landmarks[0];
@@ -68,6 +85,11 @@
       if (typeof event.data.flagHitPoint === "boolean") {
         flagHitPoint = event.data.flagHitPoint;
       }
+
+      if(typeof event.data.expIndex === "string") {
+        expIndex = event.data.expIndex;
+      }
+
       let newMessage = "";
       if(!latestLandmarks || latestLandmarks.length === 0){
         newMessage = 
@@ -91,6 +113,77 @@
         }, 300);
       }
     };
+
+    function drawEllipse() {
+      if (typeof captionY === "undefined") captionY = 0;
+      const r1 = 6;
+      const r2 = 12;
+      const x = 20;
+      ellipseItems.forEach((item, index) => {
+        if(item.radius === undefined) item.radius = r1;
+        if(item.targetRadius === undefined) item.targetRadius = r1;
+        const isActive = item.exp === expIndex;
+        item.targetRadius = isActive ? r2 : r1;
+        item.radius += (item.targetRadius - item.radius) *0.25;
+
+        //位置計算
+        let baseY = 25 + index*30;
+        let ofset = 0;
+
+        if(ellipseItems.find(e => e.exp === expIndex)) {
+          const activeIndex =
+          ellipseItems.findIndex(e => e.exp === expIndex);
+          if(index > activeIndex) { //下詰め
+            ofset = Math.max(0, 12 - Math.pow(index - activeIndex, 0.5) * 6);
+          } else if(index < activeIndex) { //上詰め
+            ofset = -Math.max(0, 12 - Math.pow(activeIndex - index, 0.5) * 6);
+          }
+        }
+       
+        const targetY = baseY + ofset;
+        if(item.labelY === undefined) item.labelY = targetY;
+        item.labelY += (targetY - item.labelY) * 0.2;
+        const y = item.labelY;
+
+        uiCtx.beginPath();
+        
+        uiCtx.arc(x, baseY, item.radius, 0, 2*Math.PI);
+        uiCtx.strokeStyle = "white";
+        uiCtx.lineWidth = 1.2;
+        uiCtx.stroke();
+
+
+        if(item.labelSize === undefined) item.labelSize = 10;
+        if(item.targetLabelSize === undefined) item.targetLabelSize = 10;
+
+        item.targetLabelSize = isActive ? 16 : 12;
+        item.labelSize += (item.targetLabelSize - item.labelSize) * 0.3;
+
+        uiCtx.fillStyle = "white";
+        uiCtx.font = `${item.labelSize}px '游ゴシック体', sans-serif`;
+        uiCtx.fillText(item.label, x+20, y+4);
+
+        if(isActive) { 
+          uiCtx.font = "14px '游ゴシック体', sans-serif";
+          const capTarget = y+25;
+          captionY += (capTarget - captionY) * 0.25;
+          uiCtx.fillText(item.desc, x+20, captionY);
+        }
+      });
+    }
+
+    function resizeCanvas(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+
+      if (canvas.width !== width * dpr || canvas.height !== height * dpr){
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+    }
   </script>
 </head>
 <body>
@@ -102,6 +195,8 @@
     
     <!--  認識した手の形状を可視化した映像（出力）  -->
     <canvas id="output" width="1920" height="1080"></canvas>
+    <!-- UI用 -->
+    <canvas id="UIcanvas" width="1920" height="1080"></canvas>
   </div>
   <div id="statusText">カメラに手をかざしてください</div>
 
@@ -117,8 +212,18 @@
     let wasPinching = false;
     let pointAlpha = 1.0;
 
+    let UIcanvas;
+    let uiCtx;
+
     function renderFromReceivedData(){
+      //resizeCanvas(canvas);
+
        ctx.clearRect(0, 0, canvas.width, canvas.height);
+       uiCtx.clearRect(0, 0, UIcanvas.width, UIcanvas.height);
+
+       resizeCanvas(UIcanvas);
+       drawEllipse();
+
        if(!latestLandmarks || !Array.isArray(latestLandmarks)){
         requestAnimationFrame(renderFromReceivedData);
         console.log(latestLandmarks); 
@@ -164,7 +269,10 @@
 
     //認識開始・終了ボタン  
 window.addEventListener("DOMContentLoaded", () => {
-    renderFromReceivedData();
+  UIcanvas = document.getElementById("UIcanvas");
+  uiCtx = UIcanvas.getContext("2d");
+  resizeCanvas(UIcanvas);
+  renderFromReceivedData();
 });
 
      
