@@ -86,10 +86,12 @@
 
   //ビデオ入れ
     const mapMargin = 0.02;
+
     const videoSources = [
       
      {
       src: "./movs/tennisball.mp4",
+      nextIndex: 10,
       xMin: 0.3, xMax: 0.7,
       yMin: 0.0, yMax: 1.0,
       hitPoint(x, y){
@@ -106,6 +108,8 @@
       },
       {
       src: "./movs_high/train/syaso.mp4",
+      expIndex: "01",
+      nextIndex: 90,
       xMin: 0.3, xMax: 0.7,
       yMin: 0.0, yMax: 1.0,
       hitPoint(x, y){
@@ -117,25 +121,11 @@
         const t = (x - this.xMin)/(this.xMax - this.xMin);
         const clip = Math.min(Math.max(t, 0), 1);
         return (1 - clip) * duration;
-      }
       },
-      {
-      src: "./movs_high/train/syaso.mp4",
-      xMin: 0.3, xMax: 0.7,
-      yMin: 0.0, yMax: 1.0,
-      hitPoint(x, y){
-      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
-          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
-      },
-      
-      mapToTime(x, y, duration){
-        const t = (x - this.xMin)/(this.xMax - this.xMin);
-        const clip = Math.min(Math.max(t, 0), 1);
-        return clip * duration;
-      }
       },
       {
       src: "./movs/elevator.mp4",
+      expIndex: "02",
       xMin: 0.3, xMax: 0.7,
       yMin: 0.1, yMax: 0.9,
       hitPoint(x, y){
@@ -166,6 +156,7 @@
       },
       {
       src: "./movs/movingRoad.mp4",
+      expIndex: "03",
       xMin: 0.1, xMax: 0.9,
       yMin: 0.2, yMax: 0.8,
       hitPoint(x, y){
@@ -179,6 +170,7 @@
       },
        {
       src: "./movs/movingTrain.mp4",
+      expIndex: "04",
       xMin: 0.1, xMax: 0.9,
       yMin: 0.1, yMax: 0.9,
       hitPoint(x, y){
@@ -1526,6 +1518,22 @@
         return (1-clip) * duration;
       }
       },
+      {
+      src: "./movs_high/train/syaso.mp4",
+      xMin: 0.3, xMax: 0.7,
+      yMin: 0.0, yMax: 1.0,
+      hitPoint(x, y){
+      return x >= this.xMin - mapMargin && x <= this.xMax + mapMargin
+          && y >= this.yMin - mapMargin && y <= this.yMax + mapMargin;
+      },
+      
+      mapToTime(x, y, duration){
+        const t = (x - this.xMin)/(this.xMax - this.xMin);
+        const clip = Math.min(Math.max(t, 0), 1);
+        return clip * duration;
+      }
+      
+      },
     ];
 
     videoSources.forEach(cfg => {
@@ -1614,7 +1622,13 @@
       if(videoFootage.currentTime < prevTimePos && !(isPinching || wasPinching)) {
         loopCount += 1;
         if(loopCount >= 3){
-          switchVideo(currentVideoIndex + 1);
+          if(currentConfig.nextIndex){
+           const toIndex = currentConfig.nextIndex;
+           switchVideo(toIndex);
+          } else {
+          let random = Math.floor(Math.random() * videoSources.length + 1);
+          switchVideo(random);
+          }
         }
       }
       prevTimePos = videoFootage.currentTime;
@@ -1744,7 +1758,8 @@
         broadcast.postMessage({ 
           landmarks:landmarks,
           isPinching: isPinching,
-          flagHitPoint: flagHitPoint
+          flagHitPoint: flagHitPoint,
+          expIndex: currentConfig.expIndex || "null"
          });
         }
       
@@ -1966,11 +1981,23 @@ if(isOutputFullscreen) return;
 
     function interpolateSeek(timestamp){
       if(!isInterP) return;
-      if(!interPoStartTime) interPoStartTime = timestamp;
+      if(!interPoStartTime) interPoStartTime = timestamp; //補間のスタート時刻を記録
 
-     const elapsed = timestamp - interPoStartTime;
+      if (!Number.isFinite(startSeek) || !Number.isFinite(endSeek)) {
+    console.warn("補間中止: 非有限値", { startSeek, endSeek });
+    isInterP = false;
+    return;
+    }
+
+     const elapsed = timestamp - interPoStartTime; //補間開始から今までの経過時間を計算
      const t = Math.min(elapsed / interPoDuration, 1);
-     const interpTime = (1 - t) * endSeek + t * startSeek;
+     const interpTime = (1 - t) * endSeek + t * startSeek; //進行度を計算
+
+       if (!Number.isFinite(interpTime)) {
+    console.warn("補間中止: 非有限のcurrentTime", interpTime);
+    isInterP = false;
+    return;
+  }
 
      videoFootage.currentTime = interpTime;
 
